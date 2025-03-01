@@ -57,12 +57,12 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   ```sh
   vagrant ssh db01
   sudo -i
-  dnf update-y
+  dnf update -y
   dnf install epel-release -y  
   dnf install git mariadb-server -y
   systemctl start mariadb
   systemctl enable mariadb
-  mysql_secure_installation #ask question type y except Disallow root login and reset password is admin123 if any other update in tomcat server #
+  mysql_secure_installation #Run mysql_secure_installation and select 'Y' for all prompts except 'Disallow root login' (choose 'N'). Set the root password to 'admin123'. If any update is needed, modify it in the Tomcat server.#
   mysql -u root -padmin123 
     mysql> create database accounts;
     mysql> grant all privileges on accounts.* TO 'admin'@'localhost' identified by 'admin123';
@@ -70,7 +70,7 @@ The `Vagrantfile` defines all virtual machines and their configurations:
     mysql> FLUSH PRIVILEGES;
     mysql> exit;
   cd /tmp/
-  git clone-b local https://github.com/hkhcoder/vprofile-project.git
+  git clone -b local https://github.com/hkhcoder/vprofile-project.git
   cd vprofile-project
   mysql -u root -padmin123 accounts < src/main/resources/db_backup.sql
   systemctl restart mariadb
@@ -86,7 +86,7 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   ```sh
   vagrant ssh mc01
   sudo -i
-  dnf update-y
+  dnf update -y
   dnf install epel-release -y
   dnf install memcached -y
   systemctl start memcached
@@ -96,10 +96,8 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   systemctl restart memcached
   systemctl start firewalld
   systemctl enable firewalld
-  firewall-cmd --add-port=11211/tcp
-  firewall-cmd --runtime-to-permanent
-  firewall-cmd --add-port=11111/udp
-  firewall-cmd --runtime-to-permanent
+  firewall-cmd --add-port=11211/tcp --permanent
+  firewall-cmd --add-port=11111/udp --permanent
   memcached -p 11211 -U 11111 -u memcached -d
 
   ```
@@ -112,7 +110,6 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   dnf install epel-release -y
   dnf install centos-release-rabbitmq-38 -y
   dnf install rabbitmq-server --enablerepo=centos-rabbitmq-38 -y 
-  systemctl enable --now rabbitmq-server
   sh -c 'echo "[{rabbit, [{loopback_users, []}]}]." > /etc/rabbitmq/rabbitmq.config'
   rabbitmqctl add_user test test
   rabbitmqctl set_user_tags test administrator
@@ -123,7 +120,7 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   firewall-cmd --add-port=5672/tcp
   firewall-cmd --runtime-to-permanent
   systemctl start rabbitmq-server
-  systemctl enable rabbitmq-server
+  systemctl enable --now rabbitmq-server
   systemctl status rabbitmq-server
   ```
 
@@ -153,9 +150,9 @@ The `Vagrantfile` defines all virtual machines and their configurations:
     Environment=JAVA_HOME=/usr/lib/jvm/jre
     Environment=CATALINA_PID=/var/tomcat/%i/run/tomcat.pid
     Environment=CATALINA_HOME=/usr/local/tomcat
-    Environment=CATALINE_BASE=/usr/local/tomcat
-    ExecStart=/usr/local/tomcat/bin/catalina.sh run
-    ExecStop=/usr/local/tomcat/bin/shutdown.sh
+    Environment=CATALINA_BASE=/usr/local/tomcat
+    ExecStart="/usr/local/tomcat/bin/catalina.sh run"
+    ExecStop="/usr/local/tomcat/bin/shutdown.sh"
     RestartSec=10
     Restart=always
     
@@ -171,7 +168,6 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   systemctl start firewalld
   systemctl enable firewalld
   firewall-cmd --zone=public --add-port=8080/tcp --permanent
-  firewall-cmd --runtime-to-permanent
   firewall-cmd --reload
 
   wget https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
@@ -228,6 +224,8 @@ The `Vagrantfile` defines all virtual machines and their configurations:
 ## Testing the Application
 1. After provisioning, access the application via:
    ```
+   http://<web01_ip> 
+   or
    http://192.168.56.11
    ```
    (Replace with the correct IP of `web01` if different.)
@@ -239,7 +237,7 @@ The `Vagrantfile` defines all virtual machines and their configurations:
   ```
 
 ## Future Enhancements
-- Implement in **Vagrant Automation** for on-primis infrastructure.
+- Implement in **Vagrant Automation** for on-premises infrastructure.
 - Implement in **AWS** for cloud infrastructure.
 - Automate deployment with **Ansible**.
 - Add **Docker** support.
